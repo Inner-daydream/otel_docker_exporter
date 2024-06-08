@@ -17,6 +17,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 FROM alpine:latest
 WORKDIR /root/
 
+# Set the source repository
+LABEL org.opencontainers.image.source https://github.com/Inner-daydream/otel_docker_exporter
+
 # Copy the binary from the builder stage
 COPY --from=builder /app/cmd/main .
 
