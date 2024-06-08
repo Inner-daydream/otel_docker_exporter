@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -94,7 +95,7 @@ func (d *DockerMetricsProvider) createContainerStatus(c types.Container, contain
 	}
 	return ContainerStatus{
 		ContainerID:  c.ID,
-		Name:         c.Names[0],
+		Name:         strings.TrimPrefix(c.Names[0], "/"),
 		Health:       health,
 		RestartCount: int64(containerDetails.RestartCount),
 		MemoryUsage:  float64(stats.MemoryStats.Usage) / float64(totalMemory) * 100,                    // Memory usage as a percentage of total memory
