@@ -3,7 +3,6 @@ package telemetry
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/Inner-daydream/otel_docker_exporter/internal/metrics"
 	"go.opentelemetry.io/otel"
@@ -11,6 +10,8 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/metric"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
 )
 
 type ContainerStatusMetrics struct {
@@ -22,7 +23,12 @@ type ContainerStatusMetrics struct {
 	uptimeMetric       metric.Int64Gauge
 }
 
-func InitTelemetry(ctx context.Context) (*ContainerStatusMetrics, func(context.Context) error, error) {
+type MeterConfiig struct {
+	ServiceName      string
+	ServiceNamespace string
+}
+
+func InitTelemetry(ctx context.Context, config MeterConfiig) (*ContainerStatusMetrics, func(context.Context) error, error) {
 	metricExporter, err := otlpmetricgrpc.New(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create metrics exporter: %w", err)
@@ -30,6 +36,11 @@ func InitTelemetry(ctx context.Context) (*ContainerStatusMetrics, func(context.C
 
 	meterProvider := sdkmetric.NewMeterProvider(
 		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(metricExporter)),
+		sdkmetric.WithResource(resource.NewWithAttributes(
+			"",
+			semconv.ServiceNameKey.String(config.ServiceName),
+			semconv.ServiceNamespaceKey.String(config.ServiceNamespace),
+		)),
 	)
 	otel.SetMeterProvider(meterProvider)
 	meter := otel.Meter("container_statuses")
@@ -89,6 +100,5 @@ func SendContainerStatuses(ctx context.Context, containerStatuses []metrics.Cont
 		metrics.healthMetric.Record(ctx, status.Health, commonAttributes)
 		metrics.stateMetric.Record(ctx, status.State, commonAttributes)
 		metrics.uptimeMetric.Record(ctx, status.Uptime, commonAttributes)
-		log.Printf("sent container status: %v", status)
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"time"
 
 	container_metrics "github.com/Inner-daydream/otel_docker_exporter/internal/metrics"
@@ -12,6 +13,22 @@ import (
 )
 
 func main() {
+	serviceName := os.Getenv("SERVICE_NAME")
+	serviceNamespace := os.Getenv("SERVICE_NAMESPACE")
+	interval, err := strconv.Atoi(os.Getenv("INTERVAL"))
+	if err != nil {
+		interval = 15
+	}
+	if serviceName == "" {
+		serviceName = "otel-docker-exporter"
+	}
+	if serviceNamespace == "" {
+		serviceNamespace = "default"
+	}
+	config := telemetry.MeterConfiig{
+		ServiceName:      serviceName,
+		ServiceNamespace: serviceNamespace,
+	}
 	// Create an instance of a type that implements ContainerMetricsProvider
 	// For example, if DockerMetricsProvider implements ContainerMetricsProvider
 	provider, err := container_metrics.NewDockerMetricsProvider()
@@ -20,7 +37,7 @@ func main() {
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-	containerStatusMetrics, shutdown, err := telemetry.InitTelemetry(ctx)
+	containerStatusMetrics, shutdown, err := telemetry.InitTelemetry(ctx, config)
 	if err != nil {
 		log.Fatalf("Failed to initialize telemetry: %v", err)
 	}
@@ -31,7 +48,7 @@ func main() {
 	}()
 
 	// Create a ticker that fires every 15 seconds
-	ticker := time.NewTicker(15 * time.Second)
+	ticker := time.NewTicker(time.Duration(interval) * time.Second)
 	defer ticker.Stop()
 
 	for {
