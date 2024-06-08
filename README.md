@@ -1,6 +1,6 @@
 # otel_docker_exporter
 
-This application collects metrics from Docker containers and exports them to an OpenTelemetry collector.
+This application collects metrics from Docker containers and exports them to an OpenTelemetry collector using gRPC.
 
 ## Metrics
 
