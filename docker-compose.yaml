@@ -33,7 +33,7 @@ services:
       - "12345:4317"
 
   docker-exporter:
-    image: Inner-daydream/otel_docker_exporter:1.0.0
+    image: ghcr.io/inner-daydream/otel_docker_exporter:1.0.0
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:12345
     volumes:
