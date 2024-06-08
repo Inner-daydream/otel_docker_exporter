@@ -1,0 +1,32 @@
+services:
+  nginx_no_healthcheck:
+    image: nginx:latest
+    ports:
+      - 8080:80
+
+  nginx_healthy:
+    image: nginx:latest
+    ports:
+      - 8081:80
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx_unhealthy:
+    image: nginx:latest
+    ports:
+      - 8082:80
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://nonexistent"]
+      interval: 30s
+      timeout: 10s
+
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "12345:4317"
