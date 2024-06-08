@@ -100,7 +100,7 @@ func (d *DockerMetricsProvider) createContainerStatus(c types.Container, contain
 		MemoryUsage:  float64(stats.MemoryStats.Usage) / float64(totalMemory) * 100,                    // Memory usage as a percentage of total memory
 		CpuUsage:     float64(stats.CPUStats.CPUUsage.TotalUsage) / float64(totalCpu*1000000000) * 100, // CPU usage as a percentage of total CPU
 		Image:        c.Image,
-		Uptime:       time.Since(startedAt).String(),
+		Uptime:       int64(time.Since(startedAt).Seconds()),
 		State:        state,
 	}
 }

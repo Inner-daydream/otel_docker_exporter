@@ -19,6 +19,7 @@ type ContainerStatusMetrics struct {
 	restartCountMetric metric.Int64Gauge
 	stateMetric        metric.Int64Gauge
 	healthMetric       metric.Int64Gauge
+	uptimeMetric       metric.Int64Gauge
 }
 
 func InitTelemetry(ctx context.Context) (*ContainerStatusMetrics, func(context.Context) error, error) {
@@ -56,12 +57,17 @@ func InitTelemetry(ctx context.Context) (*ContainerStatusMetrics, func(context.C
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create state metric: %w", err)
 	}
+	uptimeMetric, err := meter.Int64Gauge("uptime")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create uptime metric: %w", err)
+	}
 	return &ContainerStatusMetrics{
 		memoryUsageMetric:  memoryUsageMetric,
 		cpuUsageMetric:     cpuUsageMetric,
 		restartCountMetric: restartCountMetric,
 		stateMetric:        stateMetric,
 		healthMetric:       healthMetric,
+		uptimeMetric:       uptimeMetric,
 	}, meterProvider.Shutdown, nil
 }
 
@@ -82,6 +88,7 @@ func SendContainerStatuses(ctx context.Context, containerStatuses []metrics.Cont
 		metrics.restartCountMetric.Record(ctx, status.RestartCount, commonAttributes)
 		metrics.healthMetric.Record(ctx, status.Health, commonAttributes)
 		metrics.stateMetric.Record(ctx, status.State, commonAttributes)
+		metrics.uptimeMetric.Record(ctx, status.Uptime, commonAttributes)
 		log.Printf("sent container status: %v", status)
 	}
 }
