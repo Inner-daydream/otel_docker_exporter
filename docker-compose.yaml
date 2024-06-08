@@ -9,7 +9,7 @@ services:
     ports:
       - 8081:80
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost"]
+      test: [ "CMD", "curl", "-f", "http://localhost" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -19,14 +19,22 @@ services:
     ports:
       - 8082:80
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://nonexistent"]
+      test: [ "CMD", "curl", "-f", "http://nonexistent" ]
       interval: 30s
       timeout: 10s
 
   otel-collector:
+    container_name: otel-collector
     image: otel/opentelemetry-collector:latest
-    command: ["--config=/etc/otel-collector-config.yaml"]
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
       - "12345:4317"
+
+  docker-exporter:
+    image: Inner-daydream/otel_docker_exporter:1.0.0
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:12345
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro

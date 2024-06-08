@@ -46,7 +46,6 @@ func main() {
 				log.Printf("Failed to get container statuses: %v", err)
 				continue
 			}
-			log.Printf("sending container statuses: %v", containerStatuses)
 			telemetry.SendContainerStatuses(ctx, containerStatuses, containerStatusMetrics)
 		}
 	}
