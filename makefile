@@ -14,4 +14,4 @@ build:
 
 clean:
 	@echo "Cleaning up"
-	@rm -rf ./dist
+	@rm -r ./dist
