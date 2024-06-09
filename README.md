@@ -40,6 +40,20 @@ You can configure the application using the following environment variables:
 | `SERVICE_NAMESPACE`  | The namespace of the service. | default |
 | `INTERVAL`           | The interval for metrics export, in seconds. | 15 |
 
+## Additional Labels
+
+The application can also export additional labels from the Docker containers. Any Docker label that has a key starting with `otlp.label.` will be exported as an additional label with the metric data. The `otlp.label.` prefix will be removed from the key when it is exported.
+
+For example, if you have a Docker container with the following labels:
+
+```shell
+docker run -d --label otlp.label.description=WebServer --label otlp.label.department=IT my-web-app
+```
+
+These labels will be exported as description=WebServer and department=IT with the metric data.
+
+This allows you to add arbitrary labels to your Docker containers and have those labels exported with your metric data.
+
 ## docker compose
 
 here is a sample docker compose file to run the exporter
