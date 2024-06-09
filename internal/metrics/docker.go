@@ -81,7 +81,7 @@ func (d *DockerMetricsProvider) getContainerStats(ctx context.Context, container
 	return stats, nil
 }
 
-func (d *DockerMetricsProvider) createContainerStatus(c types.Container, containerDetails types.ContainerJSON, stats types.StatsJSON, totalMemory int64, totalCpu int) ContainerStatus {
+func (d *DockerMetricsProvider) createContainerStatus(c types.Container, containerDetails types.ContainerJSON, stats types.StatsJSON, totalMemory int64, totalCpu int, labels map[string]string) ContainerStatus {
 	startedAt, _ := time.Parse(time.RFC3339, containerDetails.State.StartedAt)
 	var (
 		health int64 = -1
@@ -94,15 +94,16 @@ func (d *DockerMetricsProvider) createContainerStatus(c types.Container, contain
 		state = stateStatusToInt(containerDetails.State.Status)
 	}
 	return ContainerStatus{
-		ContainerID:  c.ID,
-		Name:         strings.TrimPrefix(c.Names[0], "/"),
-		Health:       health,
-		RestartCount: int64(containerDetails.RestartCount),
-		MemoryUsage:  float64(stats.MemoryStats.Usage) / float64(totalMemory) * 100,                    // Memory usage as a percentage of total memory
-		CpuUsage:     float64(stats.CPUStats.CPUUsage.TotalUsage) / float64(totalCpu*1000000000) * 100, // CPU usage as a percentage of total CPU
-		Image:        c.Image,
-		Uptime:       int64(time.Since(startedAt).Seconds()),
-		State:        state,
+		ContainerID:      c.ID,
+		Name:             strings.TrimPrefix(c.Names[0], "/"),
+		Health:           health,
+		RestartCount:     int64(containerDetails.RestartCount),
+		MemoryUsage:      float64(stats.MemoryStats.Usage) / float64(totalMemory) * 100,                    // Memory usage as a percentage of total memory
+		CpuUsage:         float64(stats.CPUStats.CPUUsage.TotalUsage) / float64(totalCpu*1000000000) * 100, // CPU usage as a percentage of total CPU
+		Image:            c.Image,
+		Uptime:           int64(time.Since(startedAt).Seconds()),
+		State:            state,
+		AdditionalLabels: labels,
 	}
 }
 
@@ -144,8 +145,15 @@ func (d *DockerMetricsProvider) GetContainersStatus() ([]ContainerStatus, error)
 				return
 			}
 
-			status := d.createContainerStatus(c, containerDetails, stats, totalMemory, totalCpu)
+			additionalLabels := make(map[string]string)
 
+			for k, v := range containerDetails.Config.Labels {
+				if strings.HasPrefix(k, "otlp.label.") {
+					additionalLabels[k] = strings.TrimPrefix(v, "otlp.label.")
+				}
+			}
+
+			status := d.createContainerStatus(c, containerDetails, stats, totalMemory, totalCpu, additionalLabels)
 			statusesMutex.Lock()
 			statuses = append(statuses, status)
 			statusesMutex.Unlock()

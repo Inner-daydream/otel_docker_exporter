@@ -92,6 +92,9 @@ func SendContainerStatuses(ctx context.Context, containerStatuses []metrics.Cont
 			attribute.String("name", status.Name),
 			attribute.String("image", status.Image),
 		}
+		for k, v := range status.AdditionalLabels {
+			attrs = append(attrs, attribute.String(k, v))
+		}
 		commonAttributes := metric.WithAttributes(attrs...)
 		// Record the measurements
 		metrics.memoryUsageMetric.Record(ctx, status.MemoryUsage, commonAttributes)
