@@ -97,12 +97,14 @@ func (d *DockerMetricsProvider) createContainerStatus(c types.Container, contain
 		ContainerID:      c.ID,
 		Name:             strings.TrimPrefix(c.Names[0], "/"),
 		Health:           health,
+		State:            state,
 		RestartCount:     int64(containerDetails.RestartCount),
-		MemoryUsage:      float64(stats.MemoryStats.Usage) / float64(totalMemory) * 100,                    // Memory usage as a percentage of total memory
+		MemoryUsagePer:   float64(stats.MemoryStats.Usage) / float64(totalMemory) * 100, // Memory usage as a percentage of total memory
+		MemoryUsageBytes: int64(stats.MemoryStats.Usage),                                // Memory usage in bytes
+		TotalMemory:      totalMemory,
 		CpuUsage:         float64(stats.CPUStats.CPUUsage.TotalUsage) / float64(totalCpu*1000000000) * 100, // CPU usage as a percentage of total CPU
 		Image:            c.Image,
 		Uptime:           int64(time.Since(startedAt).Seconds()),
-		State:            state,
 		AdditionalLabels: labels,
 	}
 }

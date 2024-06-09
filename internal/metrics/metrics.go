@@ -8,11 +8,13 @@ type ContainerStatus struct {
 	ContainerID      string
 	Name             string
 	Health           int64
-	MemoryUsage      float64 // in percentage of the host memory
-	CpuUsage         float64 // in percentage of the host CPU
+	State            int64
+	RestartCount     int64
+	MemoryUsagePer   float64 // in percentage of the host memory
+	MemoryUsageBytes int64
+	TotalMemory      int64
+	CpuUsage         float64 // in percentage of the available cpu
 	Image            string
 	Uptime           int64 // in seconds
-	RestartCount     int64
-	State            int64
 	AdditionalLabels map[string]string
 }
