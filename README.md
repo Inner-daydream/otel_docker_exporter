@@ -23,12 +23,53 @@ Each metric is associated with the following labels:
 | `name` | The name of the container. |
 | `image` | The image used by the container. |
 
-## Collection Interval
-
-Metrics are collected every 15 seconds.
 
 ## Configuration
 
-The application is configured using the standard OpenTelemetry exporrter configuration:
+The application is configured using the standard OpenTelemetry exporter configuration:
 
-https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/
+[OpenTelemetry SDK Configuration - OTLP Exporter](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/)
+
+Note that it only exports metrics using gRPC.
+
+You can configure the application using the following environment variables:
+
+| Environment Variable | Description | Default Value |
+| -------------------- | ----------- | ------------- |
+| `SERVICE_NAME`       | The name of the service. | otel-docker-exporter |
+| `SERVICE_NAMESPACE`  | The namespace of the service. | default |
+| `INTERVAL`           | The interval for metrics export, in seconds. | 15 |
+
+## docker compose
+
+here is a sample docker compose file to run the exporter
+
+```yaml
+name: monitoring
+services:
+    otel_docker_exporter:
+      restart: unless-stopped
+      image: ghcr.io/inner-daydream/otel_docker_exporter:1.1.0
+      environment:
+        - OTEL_EXPORTER_OTLP_ENDPOINT=http://my-grpc-otlp-endpoint:12345
+        - INTERVAL=120
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:ro
+```
+
+## Building
+
+To build the application you need go installed, run the following command:
+
+```shell
+go build -o otel_docker_exporter cmd/otel_docker_exporter/main.go
+```
+
+you can also run make build to build the application for every platform.
+
+## Running
+You can run the application using the following command:
+
+```shell
+./otel_docker_exporter
+```
