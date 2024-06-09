@@ -1,5 +1,5 @@
 BINARY_NAME=otel-docker-exporter
-VERSION=1.2.0
+VERSION=1.2.1
 PLATFORMS=darwin linux windows
 ARCHITECTURES=amd64 386
 IMAGE_TAG=ghcr.io/inner-daydream/otel_docker_exporter

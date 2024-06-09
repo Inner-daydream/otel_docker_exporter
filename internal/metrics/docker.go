@@ -151,7 +151,7 @@ func (d *DockerMetricsProvider) GetContainersStatus() ([]ContainerStatus, error)
 
 			for k, v := range containerDetails.Config.Labels {
 				if strings.HasPrefix(k, "otlp.label.") {
-					additionalLabels[k] = strings.TrimPrefix(v, "otlp.label.")
+					additionalLabels[k] = strings.TrimPrefix(k, "otlp.label.")
 				}
 			}
 
