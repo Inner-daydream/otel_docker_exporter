@@ -68,7 +68,7 @@ name: monitoring
 services:
     otel_docker_exporter:
       restart: unless-stopped
-      image: ghcr.io/inner-daydream/otel_docker_exporter:1.1.0
+      image: ghcr.io/inner-daydream/otel_docker_exporter:2.0.0
       environment:
         - OTEL_EXPORTER_OTLP_ENDPOINT=http://my-grpc-otlp-endpoint:12345
         - INTERVAL=120
