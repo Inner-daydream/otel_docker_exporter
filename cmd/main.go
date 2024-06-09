@@ -50,7 +50,7 @@ func main() {
 	// Create a ticker that fires every 15 seconds
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)
 	defer ticker.Stop()
-
+	log.Printf("Started the exporter with a %d seconds interval", interval)
 	for {
 		select {
 		case <-ctx.Done():
