@@ -1,7 +1,7 @@
 BINARY_NAME=otel-docker-exporter
 VERSION=1.2.1
-PLATFORMS=darwin linux windows
-ARCHITECTURES=amd64 386
+PLATFORMS=darwin linux
+ARCHITECTURES=amd64 arm64
 IMAGE_TAG=ghcr.io/inner-daydream/otel_docker_exporter
 build:
 	@echo "Building $(BINARY_NAME) version $(VERSION)"
