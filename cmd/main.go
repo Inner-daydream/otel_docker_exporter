@@ -16,6 +16,7 @@ func main() {
 	serviceName := os.Getenv("SERVICE_NAME")
 	serviceNamespace := os.Getenv("SERVICE_NAMESPACE")
 	interval, err := strconv.Atoi(os.Getenv("INTERVAL"))
+	prefix := os.Getenv("PREFIX")
 	if err != nil {
 		interval = 15
 	}
@@ -28,6 +29,7 @@ func main() {
 	config := telemetry.MeterConfiig{
 		ServiceName:      serviceName,
 		ServiceNamespace: serviceNamespace,
+		Prefix:           prefix,
 	}
 	// Create an instance of a type that implements ContainerMetricsProvider
 	// For example, if DockerMetricsProvider implements ContainerMetricsProvider
@@ -51,20 +53,24 @@ func main() {
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)
 	defer ticker.Stop()
 	log.Printf("Started the exporter with a %d seconds interval", interval)
+	fetchAndSendStatuses(ctx, provider, containerStatusMetrics)
 	for {
 		select {
 		case <-ctx.Done():
 			// The context has been cancelled, stop the program
 			return
 		case <-ticker.C:
-			// The ticker has fired, get and send the container statuses
-			containerStatuses, err := provider.GetContainersStatus()
-			if err != nil {
-				log.Printf("Failed to get container statuses: %v", err)
-				continue
-			}
-			telemetry.SendContainerStatuses(ctx, containerStatuses, containerStatusMetrics)
+			fetchAndSendStatuses(ctx, provider, containerStatusMetrics)
 		}
 	}
 
+}
+
+func fetchAndSendStatuses(ctx context.Context, provider container_metrics.ContainerMetricsProvider, containerStatusMetrics *telemetry.ContainerStatusMetrics) {
+	containerStatuses, err := provider.GetContainersStatus()
+	if err != nil {
+		log.Printf("Failed to get container statuses: %v", err)
+		return
+	}
+	telemetry.SendContainerStatuses(ctx, containerStatuses, containerStatusMetrics)
 }

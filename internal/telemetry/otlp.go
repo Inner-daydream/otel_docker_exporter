@@ -15,17 +15,20 @@ import (
 )
 
 type ContainerStatusMetrics struct {
-	memoryUsageMetric  metric.Float64Gauge
-	cpuUsageMetric     metric.Float64Gauge
-	restartCountMetric metric.Int64Gauge
-	stateMetric        metric.Int64Gauge
-	healthMetric       metric.Int64Gauge
-	uptimeMetric       metric.Int64Gauge
+	memoryUsagePerMetric   metric.Float64Gauge
+	MemoryUsageBytesMetric metric.Int64Gauge
+	totalMemoryMetric      metric.Int64Gauge
+	cpuUsageMetric         metric.Float64Gauge
+	restartCountMetric     metric.Int64Gauge
+	stateMetric            metric.Int64Gauge
+	healthMetric           metric.Int64Gauge
+	uptimeMetric           metric.Int64Gauge
 }
 
 type MeterConfiig struct {
 	ServiceName      string
 	ServiceNamespace string
+	Prefix           string
 }
 
 func InitTelemetry(ctx context.Context, config MeterConfiig) (*ContainerStatusMetrics, func(context.Context) error, error) {
@@ -46,39 +49,54 @@ func InitTelemetry(ctx context.Context, config MeterConfiig) (*ContainerStatusMe
 	meter := otel.Meter("container_statuses")
 
 	// Initialize metrics
-	memoryUsageMetric, err := meter.Float64Gauge("memory_usage")
+	prefix := config.Prefix
+	if len(prefix) > 0 {
+		prefix += "."
+	}
+	memoryUsagePerMetric, err := meter.Float64Gauge(prefix + "container.memory.usage.percentage")
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create memory usage metric: %w", err)
 	}
+	memoryUsageBytesMetric, err := meter.Int64Gauge(prefix + "container.memory.usage.bytes")
 
-	cpuUsageMetric, err := meter.Float64Gauge("cpu_usage")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create memory usage metric: %w", err)
+	}
+	totalMemoryMetric, err := meter.Int64Gauge(prefix + "container.memory.total")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create total memory metric: %w", err)
+	}
+
+	cpuUsageMetric, err := meter.Float64Gauge(prefix + "container.cpu.usage")
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create CPU usage metric: %w", err)
 	}
 
-	restartCountMetric, err := meter.Int64Gauge("restart_count")
+	restartCountMetric, err := meter.Int64Gauge(prefix + "container.restart.count")
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create restart count metric: %w", err)
 	}
-	healthMetric, err := meter.Int64Gauge("health")
+	healthMetric, err := meter.Int64Gauge(prefix + "container.health")
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create health metric: %w", err)
 	}
-	stateMetric, err := meter.Int64Gauge("state")
+	stateMetric, err := meter.Int64Gauge(prefix + "container.state")
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create state metric: %w", err)
 	}
-	uptimeMetric, err := meter.Int64Gauge("uptime")
+	uptimeMetric, err := meter.Int64Gauge(prefix + "container.uptime")
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create uptime metric: %w", err)
 	}
 	return &ContainerStatusMetrics{
-		memoryUsageMetric:  memoryUsageMetric,
-		cpuUsageMetric:     cpuUsageMetric,
-		restartCountMetric: restartCountMetric,
-		stateMetric:        stateMetric,
-		healthMetric:       healthMetric,
-		uptimeMetric:       uptimeMetric,
+		memoryUsagePerMetric:   memoryUsagePerMetric,
+		MemoryUsageBytesMetric: memoryUsageBytesMetric,
+		totalMemoryMetric:      totalMemoryMetric,
+		cpuUsageMetric:         cpuUsageMetric,
+		restartCountMetric:     restartCountMetric,
+		stateMetric:            stateMetric,
+		healthMetric:           healthMetric,
+		uptimeMetric:           uptimeMetric,
 	}, meterProvider.Shutdown, nil
 }
 
@@ -97,7 +115,9 @@ func SendContainerStatuses(ctx context.Context, containerStatuses []metrics.Cont
 		}
 		commonAttributes := metric.WithAttributes(attrs...)
 		// Record the measurements
-		metrics.memoryUsageMetric.Record(ctx, status.MemoryUsage, commonAttributes)
+		metrics.memoryUsagePerMetric.Record(ctx, status.MemoryUsagePer, commonAttributes)
+		metrics.MemoryUsageBytesMetric.Record(ctx, status.MemoryUsageBytes, commonAttributes)
+		metrics.totalMemoryMetric.Record(ctx, status.TotalMemory, commonAttributes)
 		metrics.cpuUsageMetric.Record(ctx, status.CpuUsage, commonAttributes)
 		metrics.restartCountMetric.Record(ctx, status.RestartCount, commonAttributes)
 		metrics.healthMetric.Record(ctx, status.Health, commonAttributes)
