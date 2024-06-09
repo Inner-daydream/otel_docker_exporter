@@ -118,7 +118,9 @@ func (d *DockerMetricsProvider) GetContainersStatus() ([]ContainerStatus, error)
 	totalMemory := info.MemTotal
 	totalCpu := info.NCPU
 
-	containers, err := d.Client.ContainerList(ctx, container.ListOptions{})
+	containers, err := d.Client.ContainerList(ctx, container.ListOptions{
+		All: true,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list containers: %w", err)
 	}
