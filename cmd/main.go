@@ -31,8 +31,6 @@ func main() {
 		ServiceNamespace: serviceNamespace,
 		Prefix:           prefix,
 	}
-	// Create an instance of a type that implements ContainerMetricsProvider
-	// For example, if DockerMetricsProvider implements ContainerMetricsProvider
 	provider, err := container_metrics.NewDockerMetricsProvider()
 	if err != nil {
 		log.Fatalf("Failed to create Docker metrics provider: %v", err)
